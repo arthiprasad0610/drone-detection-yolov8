@@ -602,7 +602,7 @@ class FrameManager:
                                 height = abs(y2 - y1)
                                 
                                 # Get object label
-                                object_name = det.get('class_name', FLYING_OBJECT_CLASSES.get(class_id % 5, ('unknown', 'Unknown'))[0])
+                                object_name = det.get('class_name', FLYING_OBJECT_CLASSES.get(class_id % len(FLYING_OBJECT_CLASSES), ('unknown', 'Unknown'))[0])
                                 
                                 # Write metadata
                                 line = f"{class_id} {center_x:.2f} {center_y:.2f} {width:.2f} {height:.2f} {object_name} {confidence:.4f}\n"
@@ -681,7 +681,7 @@ def draw_flying_objects_on_frame(frame, detections: list) -> np.ndarray:
         
         # Determine color and label based on class
         # Ensure class_id is within our mapped range
-        lookup_id = class_id % 5 
+        lookup_id = class_id % len(FLYING_OBJECT_CLASSES)
         class_info = FLYING_OBJECT_CLASSES.get(lookup_id, ('unknown', 'Unknown', (255, 255, 255)))
         
         object_label = class_info[1]
