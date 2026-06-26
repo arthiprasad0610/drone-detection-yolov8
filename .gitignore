@@ -3,30 +3,27 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Environments
+# Python virtual environments
 .venv/
 venv/
 ENV/
 env/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints
+# Jupyter
+.ipynb_checkpoints/
 
-# ML/DL Training runs and checkpoints
+# YOLO training outputs
 runs/
 training_results/
-captured_datasets/training_results/
-captured_datasets/training_data/
 
-# Datasets and Temp Captures (exclude images/labels to keep repo light)
-captured_datasets/frames/
-captured_datasets/detected_objects/frames/
-captured_datasets/detected_objects/labels/
-captured_datasets/background_frames/frames/
-captured_datasets/background_frames/labels/
+# Datasets
+captured_datasets/
 input_dataset/
 
-# OS-generated files
+# Logs
+*.log
+
+# OS files
 .DS_Store
 Thumbs.db
 
@@ -38,3 +35,9 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Python cache
+.python-version
+
+# Environment variables
+.env
