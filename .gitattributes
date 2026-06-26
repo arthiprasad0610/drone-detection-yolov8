@@ -1,0 +1,5 @@
+# Treat images and weights as binary files to prevent CRLF line ending translation
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pt binary
