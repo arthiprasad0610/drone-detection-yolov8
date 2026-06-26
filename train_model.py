@@ -36,7 +36,7 @@ TRAIN_SIZE = 0.7  # 70% training
 VAL_SIZE = 0.2    # 20% validation
 TEST_SIZE = 0.1   # 10% testing
 RANDOM_SEED = 42
-EPOCHS = 30
+EPOCHS = 5
 BATCH_SIZE = 16
 IMG_SIZE = 640
 PATIENCE = 20  # Early stopping patience
@@ -156,11 +156,10 @@ def convert_custom_label_to_yolo(src_label, dest_label, img_path=None):
         lines = f.readlines()
 
     class_mapping = {
-        "drone": 1,
-        "airplane": 2,
-        "helicopter": 3,
-        "bird": 4,
-        "background": 0,
+        "drone": 3,
+        "airplane": 1,
+        "helicopter": 2,
+        "bird": 0
     }
 
     with open(dest_label, 'w') as f:
@@ -206,13 +205,12 @@ def create_yaml_config():
         'train': 'images/train',
         'val': 'images/val',
         'test': 'images/test',
-        'nc': 5,
+        'nc': 4,
         'names': {
-            0: 'background',
-            1: 'drone',
-            2: 'airplane',
-            3: 'helicopter',
-            4: 'bird'
+            0: 'bird',
+            1: 'airplane',
+            2: 'helicopter',
+            3: 'drone'
         }
     }
     
@@ -301,7 +299,7 @@ def test_inference(model):
             for box in result.boxes:
                 class_id = int(box.cls)
                 confidence = float(box.conf)
-                class_name = ["background", "drone"][class_id]
+                class_name = model.names.get(class_id, f"Class {class_id}")
                 print(f"    - {class_name}: {confidence:.2%}")
 
 

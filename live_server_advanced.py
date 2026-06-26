@@ -69,8 +69,8 @@ except ImportError:
     YOLO_AVAILABLE = False
 
 try:
-    from sahi.prediction import get_prediction
-    from sahi.models.yolov8 import Yolov8DetectionModel
+    from sahi.predict import get_sliced_prediction
+    from sahi.models.ultralytics import UltralyticsDetectionModel
     SAHI_AVAILABLE = True
 except ImportError:
     SAHI_AVAILABLE = False
@@ -122,11 +122,10 @@ FLYING_OBJECTS = {
 
 # Custom flying object classes with their specific BGR colors
 FLYING_OBJECT_CLASSES = {
-    0: ('background', 'Background', (128, 128, 128)), # Gray
-    1: ('drone', 'Drone Detected', (0, 0, 255)),     # Red
-    2: ('airplane', 'Airplane Detected', (19, 69, 139)), # Brown
-    3: ('helicopter', 'Helicopter Detected', (203, 192, 255)), # Pink
-    4: ('bird', 'Bird Detected', (0, 255, 255)),    # Yellow
+    0: ('bird', 'Bird Detected', (128, 128, 128)), # Gray
+    1: ('airplane', 'Airplane Detected', (0, 0, 255)),     # Red
+    2: ('helicopter', 'Helicopter Detected', (19, 69, 139)), # Brown
+    3: ('drone', 'Drone Detected', (203, 192, 255)), # Pink
 }
 
 # Model selection — prefer the custom-trained model, fall back to generic YOLOv8n
@@ -221,7 +220,7 @@ class FrameManager:
         if SAHI_AVAILABLE:
             try:
                 logger.info(f"Loading SAHI model: {MODEL_PATH}")
-                self.sahi_model = Yolov8DetectionModel(
+                self.sahi_model = UltralyticsDetectionModel(
                     model_path=MODEL_PATH,
                     confidence_threshold=0.3,
                     device="cpu"
@@ -271,7 +270,7 @@ class FrameManager:
             
             if SAHI_AVAILABLE:
                 try:
-                    self.sahi_model = Yolov8DetectionModel(
+                    self.sahi_model = UltralyticsDetectionModel(
                         model_path=new_model_path,
                         confidence_threshold=0.3,
                         device="cpu"
@@ -306,7 +305,7 @@ class FrameManager:
         # ---- Primary detection (custom model or SAHI) ----
         if self.sahi_model:
             try:
-                results = get_prediction(
+                results = get_sliced_prediction(
                     image=frame,
                     detection_model=self.sahi_model,
                     slice_height=256,
@@ -384,6 +383,12 @@ class FrameManager:
         # Store detections for later use
         self.current_detections = detections
 
+        # ===== DEBUG =====
+        logger.info(f"Found {len(detections)} detections in frame {self.current_frame_id}")
+
+        for d in detections:
+            logger.info(d)
+        # =================
         return {
             'frame_id': self.current_frame_id,
             'has_object': has_object,
@@ -834,11 +839,11 @@ app.add_middleware(
 @app.get("/", response_class=HTMLResponse)
 async def get_dashboard():
     """HTML dashboard with capture controls."""
-    return """
+    return r"""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>🛡️ SkyGuard Smart Capture System</title>
+        <title>🛡️ Aerial Object Detection and Classification System</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
