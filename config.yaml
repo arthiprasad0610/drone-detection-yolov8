@@ -1,0 +1,199 @@
+# ============================================================
+# config.yaml — Central Configuration for Aerial Classifier
+# ============================================================
+# All hyperparameters, paths, and class definitions live here.
+# Modify this file to adapt the system to new datasets or
+# deployment environments without touching any source code.
+
+# ---------- CLASS DEFINITIONS ----------
+# These are the aerial object classes the model will detect.
+# Add/remove classes here to extend or restrict the detector.
+classes:
+  0: bird
+  1: aeroplane
+  2: helicopter
+  3: drone
+  4: military_jet
+  5: missile
+  6: hot_air_balloon
+  7: paraglider
+  8: unknown_aerial_object   # catch-all for unrecognised threats
+
+num_classes: 9
+
+# Threat-level mapping (used for alert system in defence context)
+# 0 = Safe, 1 = Monitor, 2 = Alert, 3 = Critical
+threat_levels:
+  bird: 0
+  aeroplane: 1
+  helicopter: 1
+  drone: 2
+  military_jet: 3
+  missile: 3
+  hot_air_balloon: 0
+  paraglider: 0
+  unknown_aerial_object: 2
+
+# ---------- PATHS ----------
+paths:
+  raw_data:            data/raw/
+  processed_data:      data/processed/
+  frame_output:        outputs/frames/
+  results_output:      outputs/results/
+  model_weights:       models/
+  logs:                outputs/logs/
+  detections_txt:      outputs/detections/
+  captured_frames:     captured_datasets/frames/
+  captured_labels:     captured_datasets/labels/
+
+# ---------- FRAME EXTRACTION ----------
+frame_extraction:
+  fps: 5                # Extract 5 frames per second (tune per use-case)
+  resize_width: 640
+  resize_height: 640
+  quality: 95           # JPEG quality (1-100)
+  skip_similar: true    # Skip near-identical frames (reduces redundancy)
+  similarity_threshold: 0.95  # SSIM threshold for duplicate detection
+
+# ---------- MODEL CONFIGURATION ----------
+model:
+  architecture: yolov8n  # yolov8n (nano), yolov8s, yolov8m, yolov8l, yolov8x
+                         # nano = fastest, x = most accurate
+  input_size: [640, 640]  # Model input image dimensions
+  confidence_threshold: 0.4  # Minimum confidence to report detections (0-1)
+  iou_threshold: 0.45        # IoU threshold for NMS (Non-Maximum Suppression)
+  max_detections: 300        # Maximum detections per frame
+
+# ---------- TRAINING CONFIGURATION ----------
+training:
+  epochs: 50                # Number of training epochs
+  batch_size: 16            # Batch size (reduce if out of memory)
+  learning_rate: 0.001      # Initial learning rate
+  momentum: 0.937           # SGD momentum
+  weight_decay: 0.0005      # L2 regularisation
+  warmup_epochs: 3          # Warmup period
+  patience: 15              # Early stopping patience (epochs with no improvement)
+  device: auto              # 'auto', 'cuda', 'cpu'
+  workers: 4                # DataLoader workers (CPU cores)
+  seed: 42                  # Random seed for reproducibility
+  save_period: 10           # Save model every N epochs
+  val_split: 0.2            # Validation split ratio
+  
+# ---------- DATA AUGMENTATION ----------
+augmentation:
+  mosaic: 1.0       # Mosaic augmentation probability
+  mixup: 0.1        # MixUp augmentation probability
+  flipud: 0.0       # Vertical flip probability
+  fliplr: 0.5       # Horizontal flip probability
+  degrees: 10.0     # Rotation range (degrees)
+  translate: 0.1    # Translation range (fraction of image)
+  scale: 0.5        # Scale range (fraction)
+  hsv_h: 0.015      # HSV-Hue augmentation
+  hsv_s: 0.7        # HSV-Saturation augmentation
+  hsv_v: 0.4        # HSV-Value (brightness) augmentation
+
+# ---------- INFERENCE CONFIGURATION ----------
+inference:
+  min_object_size: 10       # Minimum bounding box dimension (pixels)
+  alert_on_threat: true     # Log alerts for threat_level >= 2
+  save_output: true         # Save annotated frames
+  show_display: true        # Display real-time video (set false for headless)
+  output_video: outputs/results/detection_output.mp4
+  max_processing_fps: 30    # Cap processing speed to avoid overwhelming system
+  track_objects: true       # Enable object tracking across frames
+  confidence_smoothing: 0.7  # Temporal smoothing for confidence scores
+
+# ---------- SAHI CONFIGURATION (Sliced Aided Hyper Inference) ----------
+# SAHI improves detection of SMALL objects by splitting images into overlapping slices
+sahi:
+  enabled: true             # Enable SAHI for small object detection
+  slice_height: 320         # Height of each slice (pixels)
+  slice_width: 320          # Width of each slice (pixels)
+  overlap_height_ratio: 0.2 # Overlap ratio in vertical direction
+  overlap_width_ratio: 0.2  # Overlap ratio in horizontal direction
+  postprocess_type: "nms"   # 'nms' or 'lsrnms' (Less Restrictive NMS)
+  postprocess_match_metric: "ios"  # 'ios' or 'iou'
+  postprocess_match_threshold: 0.5
+  verbose: false            # Print SAHI debug info
+
+# ---------- REAL-TIME STREAM CONFIGURATION ----------
+streaming:
+  buffer_size: 30           # Frame buffer for temporal analysis
+  display_resolution: [1280, 720]  # Display resolution for stream
+  fps_cap: 30               # Maximum FPS for output stream
+  bitrate_mbps: 5.0         # Video bitstream bitrate
+
+# ---------- ALERT CONFIGURATION ----------
+alerts:
+  enable_sound: true        # Play alert sound on threat detection
+  enable_logging: true      # Log threats to alert_log file
+  critical_actions:         # Actions to trigger for critical threats
+    - log
+    - alert
+    - email_notify
+  monitor_actions:          # Actions for monitor-level threats
+    - log
+  sound_file: assets/alert_sound.mp3  # Alert sound file path
+
+# ---------- API CONFIGURATION ----------
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+  log_level: "info"
+  enable_cors: true
+
+# ---------- DATABASE/LOGGING ----------
+logging:
+  level: "INFO"             # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s [%(levelname)s] %(message)s"
+  log_to_file: true
+  log_file: outputs/logs/aerial_classifier.log
+  quality: 95           # JPEG quality for saved frames
+  skip_similar: true    # Skip near-duplicate frames (saves disk space)
+  similarity_threshold: 0.95
+
+# ---------- MODEL CONFIGURATION ----------
+model:
+  architecture: yolov8l     # Options: yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+  pretrained: true          # Start from COCO pretrained weights
+  input_size: [640, 640]
+  confidence_threshold: 0.45
+  iou_threshold: 0.45       # Non-Maximum Suppression IoU
+  max_detections: 100
+
+# ---------- TRAINING ----------
+training:
+  epochs: 100
+  batch_size: 16
+  learning_rate: 0.01
+  weight_decay: 0.0005
+  momentum: 0.937
+  warmup_epochs: 3
+  patience: 20              # Early stopping patience
+  val_split: 0.2
+  seed: 42
+  device: auto              # 'auto' picks GPU if available, else CPU
+  workers: 8
+  save_period: 10           # Save checkpoint every N epochs
+  augmentation:
+    mosaic: 1.0
+    mixup: 0.1
+    flipud: 0.0
+    fliplr: 0.5
+    degrees: 10.0
+    translate: 0.1
+    scale: 0.5
+    hsv_h: 0.015
+    hsv_s: 0.7
+    hsv_v: 0.4
+
+# ---------- INFERENCE / REAL-TIME ----------
+inference:
+  stream_source: 0          # 0 = webcam, or path to video file / RTSP URL
+  show_display: true
+  save_output: true
+  output_video: outputs/results/annotated_output.mp4
+  alert_on_threat: true
+  min_object_size: 20       # Ignore detections smaller than 20px (noise filter)

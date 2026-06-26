@@ -1,0 +1,21 @@
+# YOLOv8 Custom Dataset Configuration
+# Dataset: Drone Detection Dataset
+# Description: Custom dataset with drone detection and background frames
+
+path: c:\PINKY\drone detection\captured_datasets  # dataset root dir
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs]
+train: detected_objects/images  # train images
+val: detected_objects/images    # val images (using same set for now - split in code)
+test: background_frames/images  # test images
+
+# Number of classes
+nc: 5
+
+# Class names
+names:
+  0: background
+  1: drone
+  2: airplane
+  3: helicopter
+  4: bird

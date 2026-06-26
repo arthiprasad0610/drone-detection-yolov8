@@ -1,0 +1,11 @@
+names:
+  0: background
+  1: drone
+  2: airplane
+  3: helicopter
+  4: bird
+nc: 5
+path: c:\PINKY\drone detection\captured_datasets\training_data
+test: images/test
+train: images/train
+val: images/val

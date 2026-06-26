@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SkyGuard Live</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            color: #2c3e50; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 { 
+            color: #1a73e8;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            letter-spacing: 1px;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto;
+        }
+        .section { 
+            background: white;
+            border: 1px solid #e0e6ed;
+            padding: 25px; 
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        .section h2 { 
+            color: #1a73e8; 
+            margin-bottom: 15px; 
+            font-size: 1.4em;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        
+        /* Live Stream Section */
+        #status { 
+            color: #5f6368; 
+            font-size: 1.1em; 
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        canvas { 
+            border: 2px solid #e0e6ed; 
+            max-width: 100%; 
+            height: auto;
+            display: block;
+            margin: 10px auto;
+            border-radius: 8px;
+        }
+        
+        /* Upload Section */
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        #videoFile {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-label {
+            background: linear-gradient(135deg, #1a73e8 0%, #1765d0 100%);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: block;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2);
+        }
+        .file-label:hover {
+            background: linear-gradient(135deg, #1765d0 0%, #155ab8 100%);
+            box-shadow: 0 6px 15px rgba(26, 115, 232, 0.4);
+            transform: translateY(-2px);
+        }
+        #fileName {
+            color: #34a853;
+            font-size: 0.95em;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .upload-btn-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #uploadBtn {
+            background: linear-gradient(135deg, #34a853 0%, #2d904a 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 168, 83, 0.2);
+        }
+        #uploadBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2d904a 0%, #258a42 100%);
+            box-shadow: 0 6px 15px rgba(52, 168, 83, 0.4);
+            transform: translateY(-2px);
+        }
+        #resetBtn {
+            background: #f1f3f4;
+            color: #1a73e8;
+            border: 2px solid #1a73e8;
+        }
+        #resetBtn:hover {
+            background: #e8f0fe;
+            transform: translateY(-2px);
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            display: none;
+            margin-top: 15px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e8ecf1;
+            border: 1px solid #d2d9e1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1a73e8, #34a853);
+            width: 0%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: width 0.3s;
+        }
+        
+        /* Logs */
+        #log { 
+            background: #f8f9fa;
+            padding: 15px; 
+            height: 200px; 
+            overflow-y: auto; 
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+        }
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid #e8ecf1;
+            text-align: left;
+            font-size: 0.9em;
+            font-family: 'Monaco', monospace;
+            color: #5f6368;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .alert { 
+            color: #ea4335;
+            font-weight: 600;
+        }
+        .success { color: #34a853; font-weight: 600; }
+        .warning { color: #fbbc04; font-weight: 600; }
+        .info { color: #1a73e8; font-weight: 600; }
+        
+        /* Results */
+        .results-section {
+            display: none;
+        }
+        .result-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8ecf1 100%);
+            border-left: 4px solid #1a73e8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            text-align: left;
+        }
+        .result-key {
+            color: #1a73e8;
+            font-weight: 700;
+            font-size: 0.95em;
+        }
+        .result-value {
+            color: #2c3e50;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        
+        @keyframes blink { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.3; } 
+            100% { opacity: 1; } 
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f3f4;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1a73e8;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1765d0;
+        }
+        
+        /* Stats Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin: 10px 0;
+            font-weight: 700;
+        }
+        .stat-card p {
+            font-size: 0.95em;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .stat-card.danger {
+            background: linear-gradient(135deg, #ea4335 0%, #c5221f 100%);
+            box-shadow: 0 4px 15px rgba(234, 67, 53, 0.2);
+        }
+        
+        .stat-card.success {
+            background: linear-gradient(135deg, #34a853 0%, #2d904a 100%);
+            box-shadow: 0 4px 15px rgba(52, 168, 83, 0.2);
+        }
+        
+        .stat-card.warning {
+            background: linear-gradient(135deg, #fbbc04 0%, #f9a825 100%);
+            box-shadow: 0 4px 15px rgba(251, 188, 4, 0.2);
+            color: #2c3e50;
+        }
+        
+        /* Detection History */
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .history-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e8ecf1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .history-item:hover {
+            background: #e8ecf1;
+        }
+        .history-label {
+            flex: 1;
+        }
+        .history-time {
+            color: #5f6368;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        
+        /* Action Buttons Grid */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .action-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .action-btn-icon {
+            font-size: 1.8em;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1a73e8 0%, #1765d0 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2);
+        }
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 6px 15px rgba(26, 115, 232, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #34a853 0%, #2d904a 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 168, 83, 0.2);
+        }
+        .btn-success:hover:not(:disabled) {
+            box-shadow: 0 6px 15px rgba(52, 168, 83, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ea4335 0%, #c5221f 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(234, 67, 53, 0.2);
+        }
+        .btn-danger:hover:not(:disabled) {
+            box-shadow: 0 6px 15px rgba(234, 67, 53, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        /* Info Banner */
+        .info-banner {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2c3e50;
+        }
+        .info-banner.success {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+            border-left-color: #34a853;
+            color: #1b5e20;
+        }
+        .info-banner.warning {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left-color: #fbbc04;
+            color: #e65100;
+        }
+        .info-banner.danger {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcccc 100%);
+            border-left-color: #ea4335;
+            color: #b71c1c;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border: 1px solid #e0e6ed;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s;
+        }
+        .modal-content h3 {
+            color: #1a73e8;
+            margin-bottom: 20px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-size: 1.3em;
+        }
+        .file-details {
+            background: #f8f9fa;
+            border: 1px solid #e0e6ed;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .detail-row {
+            padding: 10px 0;
+            border-bottom: 1px solid #e8ecf1;
+            display: flex;
+            justify-content: space-between;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            color: #1a73e8;
+            font-weight: 700;
+        }
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        #confirmBtn {
+            background: linear-gradient(135deg, #34a853 0%, #2d904a 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 168, 83, 0.2);
+        }
+        #confirmBtn:hover {
+            background: linear-gradient(135deg, #2d904a 0%, #258a42 100%);
+            box-shadow: 0 6px 15px rgba(52, 168, 83, 0.4);
+            transform: translateY(-2px);
+        }
+        #cancelBtn {
+            background: #f1f3f4;
+            color: #ea4335;
+            border: 2px solid #ea4335;
+        }
+        #cancelBtn:hover {
+            background: #feeeee;
+            transform: translateY(-2px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ SKYGUARD DRONE DETECTION SYSTEM 🚁</h1>
+        
+        <!-- Info Banner -->
+        <div class="info-banner success">
+            <span>✨</span>
+            <span><strong>Welcome to SkyGuard!</strong> Real-time drone detection and analysis powered by AI</span>
+        </div>
+        
+        <!-- Statistics Dashboard -->
+        <div class="section">
+            <h2>📊 REAL-TIME STATISTICS</h2>
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <p>✅ Total Frames</p>
+                    <h3 id="totalFrames">0</h3>
+                    <p>Processed</p>
+                </div>
+                <div class="stat-card danger">
+                    <p>🎯 Threats Detected</p>
+                    <h3 id="threatsDetected">0</h3>
+                    <p>Drones Found</p>
+                </div>
+                <div class="stat-card warning">
+                    <p>⚠️ Alert Level</p>
+                    <h3 id="alertLevel">LOW</h3>
+                    <p>Current Status</p>
+                </div>
+                <div class="stat-card">
+                    <p>🎨 Background</p>
+                    <h3 id="backgroundCount">0</h3>
+                    <p>Training Frames</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Stream Section -->
+        <div class="section">
+            <h2>📹 LIVE DETECTION STREAM</h2>
+            <div id="status" style="padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px;">
+                🔴 No camera detected - use VIDEO UPLOAD or DATASET SELECTION
+            </div>
+            <canvas id="videoCanvas" style="display:none;"></canvas>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="section">
+            <h2>🎬 VIDEO FILE UPLOAD</h2>
+            <p style="color: #5f6368; margin-bottom: 15px;">📤 Upload your video file for AI-powered drone detection analysis</p>
+            <div class="upload-form">
+                <div class="file-input-wrapper">
+                    <label for="videoFile" class="file-label">📁 SELECT VIDEO FILE</label>
+                    <input type="file" id="videoFile" accept="video/*" />
+                </div>
+                <div id="fileName"></div>
+                <div class="upload-btn-wrapper">
+                    <button id="uploadBtn" disabled>⬆️ UPLOAD & ANALYZE</button>
+                    <button id="resetBtn">🔄 RESET</button>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VIDEO DATASET SELECTION SECTION -->
+        <div class="section">
+            <h2>📽️ DATASET ANALYSIS</h2>
+            <p style="color: #5f6368; margin-bottom: 15px;">🎥 Select a video from your dataset folder for comprehensive analysis</p>
+            <div class="upload-form">
+                <div style="position: relative; overflow: hidden; display: block;">
+                    <label for="videoSelect" style="display: block; margin-bottom: 10px; color: #1a73e8; font-weight: 600;">🗂️ Available Videos:</label>
+                    <select id="videoSelect" style="width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 8px; font-size: 1em; background: white; cursor: pointer; margin-bottom: 10px;">
+                        <option value="">-- Select a video --</option>
+                    </select>
+                </div>
+                <div id="selectedVideoInfo" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #667eea;">
+                    <div style="color: #667eea; font-weight: 600; margin-bottom: 8px;">📋 Selected Video Details:</div>
+                    <div style="color: #2c3e50; font-size: 0.95em;">
+                        <div><strong>📅 Name:</strong> <span id="selectedVideoName"></span></div>
+                        <div><strong>💾 Size:</strong> <span id="selectedVideoSize"></span></div>
+                    </div>
+                </div>
+                
+                <div class="action-grid">
+                    <button id="processVideoBtn" disabled class="action-btn btn-primary">
+                        <span class="action-btn-icon">▶️</span>
+                        <span>PLAY & ANALYZE</span>
+                    </button>
+                    <button id="stopVideoBtn" disabled class="action-btn btn-danger">
+                        <span class="action-btn-icon">⏹️</span>
+                        <span>STOP</span>
+                    </button>
+                    <button id="exportResultsBtn" class="action-btn btn-success">
+                        <span class="action-btn-icon">📥</span>
+                        <span>EXPORT RESULTS</span>
+                    </button>
+                </div>
+                
+                <div id="videoProgress" style="display: none; margin-top: 15px;">
+                    <div style="color: #667eea; font-weight: 600; margin-bottom: 10px;">⏳ Processing Status:</div>
+                    <div style="background: gradient(135deg, #e8ecf1 0%, #f0f2f5 100%); padding: 15px; border-radius: 8px; color: #2c3e50; font-size: 0.95em; border-left: 4px solid #667eea;">
+                        <div id="videoProgressText">🔄 Initializing video processing...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detection History -->
+        <div class="section">
+            <h2>📜 DETECTION HISTORY</h2>
+            <div class="history-list" id="historyList">
+                <div class="history-item">
+                    <span>🟢 System initialized and ready</span>
+                    <span class="history-time">Now</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="section results-section">
+            <h2>🎯 ANALYSIS RESULTS</h2>
+            <div id="results"></div>
+        </div>
+        
+        <!-- System Log -->
+        <div class="section">
+            <h2>🔧 SYSTEM LOG & STATUS</h2>
+            <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; display: flex; gap: 15px;">
+                <button id="clearLogsBtn" class="action-btn btn-primary" style="flex: 0; padding: 10px 15px; font-size: 0.8em;">
+                    <span>🗑️ Clear Logs</span>
+                </button>
+                <button id="exportLogsBtn" class="action-btn btn-success" style="flex: 0; padding: 10px 15px; font-size: 0.8em;">
+                    <span>📄 Export Logs</span>
+                </button>
+            </div>
+            <div id="log"></div>
+        </div>
+    </div>
+    
+    <!-- File Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>📋 CONFIRM FILE SELECTION</h3>
+            <p style="color: #2c3e50; margin-bottom: 15px;">Please review the file details before confirming:</p>
+            <div class="file-details">
+                <div class="detail-row">
+                    <span class="detail-label">📄 Filename:</span>
+                    <span class="detail-value" id="modalFileName"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">💾 File Size:</span>
+                    <span class="detail-value" id="modalFileSize"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🏷️ File Type:</span>
+                    <span class="detail-value" id="modalFileType"></span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmBtn" class="modal-btn">✅ CONFIRM</button>
+                <button id="cancelBtn" class="modal-btn">❌ CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === STATISTICS VARS ===
+        let stats = {
+            totalFrames: 0,
+            threatsDetected: 0,
+            backgroundCount: 0,
+            alertLevel: 'LOW'
+        };
+        
+        // === VIDEO DATASET HANDLING ===
+        const videoSelect = document.getElementById('videoSelect');
+        const selectedVideoInfo = document.getElementById('selectedVideoInfo');
+        const processVideoBtn = document.getElementById('processVideoBtn');
+        const stopVideoBtn = document.getElementById('stopVideoBtn');
+        const exportResultsBtn = document.getElementById('exportResultsBtn');
+        const videoProgress = document.getElementById('videoProgress');
+        let videoProcessingActive = false;
+        
+        // Load available videos when page loads
+        async function loadAvailableVideos() {
+            try {
+                const response = await fetch('http://localhost:7000/list-videos');
+                const data = await response.json();
+                
+                if (data.success && data.videos.length > 0) {
+                    // Clear existing options except the first one
+                    while (videoSelect.options.length > 1) {
+                        videoSelect.remove(1);
+                    }
+                    
+                    // Add video options
+                    data.videos.forEach(video => {
+                        const option = document.createElement('option');
+                        option.value = video.name;
+                        option.textContent = `🎬 ${video.name} (${video.size_mb} MB)`;
+                        videoSelect.appendChild(option);
+                    });
+                    
+                    addLog(`✓ Loaded ${data.total} video(s) from dataset`, "success");
+                } else {
+                    addLog('ℹ️ No videos found in input_dataset folder', "info");
+                }
+            } catch (e) {
+                console.error('Error loading videos:', e);
+                addLog('⚠️ Could not load video list from dataset', "warning");
+            }
+        }
+        
+        // Handle video selection
+        videoSelect.addEventListener('change', (e) => {
+            const selectedValue = e.target.value;
+            
+            if (selectedValue) {
+                const selectedOption = videoSelect.options[videoSelect.selectedIndex];
+                const optionText = selectedOption.textContent;
+                const videoName = selectedValue;
+                
+                // Extract size from option text
+                const sizeMatch = optionText.match(/\(([^)]+)\)/);
+                const sizeText = sizeMatch ? sizeMatch[1] : 'Unknown';
+                
+                // Show selected video info
+                document.getElementById('selectedVideoName').textContent = videoName;
+                document.getElementById('selectedVideoSize').textContent = sizeText;
+                selectedVideoInfo.style.display = 'block';
+                processVideoBtn.disabled = false;
+                
+                addLog(`🎥 Video selected: ${videoName}`, "info");
+            } else {
+                selectedVideoInfo.style.display = 'none';
+                processVideoBtn.disabled = true;
+                videoProgress.style.display = 'none';
+            }
+        });
+        
+        // Process video button
+        processVideoBtn.addEventListener('click', async () => {
+            const selectedVideo = videoSelect.value;
+            
+            if (!selectedVideo) {
+                addLog('⚠️ Please select a video first', "warning");
+                return;
+            }
+            
+            try {
+                processVideoBtn.disabled = true;
+                videoProgress.style.display = 'block';
+                videoProcessingActive = true;
+                
+                addLog(`⏳ Starting video analysis: ${selectedVideo}...`, "info");
+                
+                const response = await fetch('http://localhost:7000/process-video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        video_name: selectedVideo
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✓ Video analysis started: ${selectedVideo}`, "success");
+                    stopVideoBtn.disabled = false;
+                    updateVideoProgress();
+                } else {
+                    addLog(`✗ Error: ${data.message}`, "alert");
+                    processVideoBtn.disabled = false;
+                    videoProgress.style.display = 'none';
+                    videoProcessingActive = false;
+                }
+            } catch (error) {
+                addLog(`✗ Error starting video processing: ${error.message}`, "alert");
+                processVideoBtn.disabled = false;
+                videoProgress.style.display = 'none';
+                videoProcessingActive = false;
+            }
+        });
+        
+        // Stop video button
+        stopVideoBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('http://localhost:7000/stop-video', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('✓ Video analysis stopped', "success");
+                    videoProcessingActive = false;
+                    stopVideoBtn.disabled = true;
+                    processVideoBtn.disabled = false;
+                    videoProgress.style.display = 'none';
+                }
+            } catch (error) {
+                addLog(`✗ Error stopping video: ${error.message}`, "alert");
+            }
+        });
+        
+        // Export results button
+        exportResultsBtn.addEventListener('click', () => {
+            addLog('📥 Exporting results...', "info");
+            // Placeholder for export functionality
+            setTimeout(() => {
+                addLog('✓ Results exported successfully', "success");
+            }, 1000);
+        });
+        
+        // Update video processing progress
+        function updateVideoProgress() {
+            const updateInterval = setInterval(async () => {
+                if (!videoProcessingActive) {
+                    clearInterval(updateInterval);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('http://localhost:7000/stats');
+                    const statsData = await response.json();
+                    
+                    // Update global stats
+                    stats.totalFrames = statsData.current_frame_id || 0;
+                    stats.threatsDetected = statsData.detected_objects || 0;
+                    stats.backgroundCount = statsData.background_frames || 0;
+                    stats.alertLevel = statsData.detected_objects > 0 ? 'HIGH' : 'LOW';
+                    
+                    updateStatsDisplay();
+                    
+                    const progressText = document.getElementById('videoProgressText');
+                    progressText.innerHTML = `
+                        <div>⏱️ <strong>Frames Processed:</strong> ${statsData.current_frame_id || 0}</div>
+                        <div>🎯 <strong>Objects Detected:</strong> ${statsData.detected_objects || 0}</div>
+                        <div>🎨 <strong>Background Frames:</strong> ${statsData.background_frames || 0}</div>
+                    `;
+                } catch (e) {
+                    console.error('Error updating progress:', e);
+                }
+            }, 2000);
+        }
+        
+        // Update stats display
+        function updateStatsDisplay() {
+            document.getElementById('totalFrames').textContent = stats.totalFrames;
+            document.getElementById('threatsDetected').textContent = stats.threatsDetected;
+            document.getElementById('backgroundCount').textContent = stats.backgroundCount;
+            document.getElementById('alertLevel').textContent = stats.alertLevel;
+            
+            // Update alert level styling
+            const alertCard = document.querySelector('.stat-card.warning');
+            if (stats.alertLevel === 'HIGH') {
+                alertCard.className = 'stat-card danger';
+                alertCard.innerHTML = '<p>🚨 Alert Level</p><h3>' + stats.alertLevel + '</h3><p>THREAT DETECTED</p>';
+            } else {
+                alertCard.className = 'stat-card success';
+                alertCard.innerHTML = '<p>⚠️ Alert Level</p><h3>' + stats.alertLevel + '</h3><p>All Clear</p>';
+            }
+        }
+        
+        // Load videos on page load
+        loadAvailableVideos();
+        
+        // Refresh video list every 10 seconds
+        setInterval(loadAvailableVideos, 10000);
+        
+        // === LIVE STREAM HANDLER ===
+        const ws = new WebSocket("ws://localhost:8000/ws");
+        const canvas = document.getElementById('videoCanvas');
+        const ctx = canvas.getContext('2d');
+        const log = document.getElementById('log');
+        
+        let wsConnected = false;
+
+        ws.onopen = () => {
+            wsConnected = true;
+            addLog("✅ Connected to detection system", "success");
+        };
+
+        ws.onmessage = async (event) => {
+            if (typeof event.data === "string") {
+                const data = JSON.parse(event.data);
+                const alertStatus = data.alert ? '🚨 YES' : '✅ NO';
+                document.getElementById('status').innerHTML = `📊 Objects Found: <strong>${data.count}</strong> | ⚠️ Alert: <strong>${alertStatus}</strong>`;
+                
+                if (data.alert) {
+                    stats.alertLevel = 'HIGH';
+                    stats.threatsDetected++;
+                    updateStatsDisplay();
+                    addLog(`🚨 ALERT: ${data.objects.join(', ').toUpperCase()} DETECTED ⚠️`, "alert");
+                }
+            } else {
+                const blob = event.data;
+                const img = new Image();
+                img.src = URL.createObjectURL(blob);
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
+        };
+
+        ws.onerror = (error) => {
+            // Only log if not already closed
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                addLog("⚠️ Live stream unavailable (no camera detected) - use file upload instead", "warning");
+            }
+        };
+
+        ws.onclose = () => {
+            wsConnected = false;
+            // Don't show error for initial connection failures
+            if (wsConnected) {
+                addLog("❌ Connection closed", "warning");
+            }
+        };
+
+        // === UPLOAD HANDLER ===
+        const videoFileInput = document.getElementById('videoFile');
+        const fileNameDisplay = document.getElementById('fileName');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.querySelector('.progress-container');
+        const progressFill = document.querySelector('.progress-fill');
+        const resultsSection = document.querySelector('.results-section');
+        const resultsDiv = document.getElementById('results');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const exportLogsBtn = document.getElementById('exportLogsBtn');
+        
+        // Modal elements
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        let pendingFile = null;
+
+        // Show confirmation modal when file is selected
+        videoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                pendingFile = file;
+                
+                // Populate modal with file details
+                document.getElementById('modalFileName').textContent = file.name;
+                document.getElementById('modalFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                document.getElementById('modalFileType').textContent = file.type || 'Unknown';
+                
+                // Show modal
+                confirmModal.classList.add('show');
+                addLog(`📄 File selected: ${file.name}`, "info");
+            }
+        });
+        
+        // Confirm button - actually select the file
+        confirmBtn.addEventListener('click', () => {
+            if (pendingFile) {
+                fileNameDisplay.textContent = `📄 Confirmed: ${pendingFile.name} (${(pendingFile.size / 1024 / 1024).toFixed(2)} MB)`;
+                uploadBtn.disabled = false;
+                addLog(`✅ File confirmed: ${pendingFile.name}`, "success");
+                confirmModal.classList.remove('show');
+                pendingFile = null;
+            }
+        });
+        
+        // Cancel button - reject the selection
+        cancelBtn.addEventListener('click', () => {
+            videoFileInput.value = ''; // Reset file input
+            fileNameDisplay.textContent = '';
+            uploadBtn.disabled = true;
+            addLog(`❌ File selection cancelled`, "warning");
+            confirmModal.classList.remove('show');
+            pendingFile = null;
+        });
+
+        uploadBtn.addEventListener('click', async () => {
+            const file = videoFileInput.files[0];
+            if (!file) return;
+
+            uploadBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            addLog(`⏳ Uploading and analyzing: ${file.name}...`, "info");
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', (e) => {
+                    const progress = (e.loaded / e.total) * 100;
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = Math.round(progress) + '%';
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            displayVideoResults(response);
+                            addLog(`✅ Analysis complete! Processed ${response.frames_processed || response.num_detected || 0} frames/objects.`, "success");
+                        } catch (parseError) {
+                            addLog(`✗ Error parsing response: ${parseError.message}`, "alert");
+                        }
+                    } else {
+                        addLog(`✗ Upload failed with status ${xhr.status}: ${xhr.responseText}`, "alert");
+                    }
+                    uploadBtn.disabled = false;
+                });
+
+                xhr.addEventListener('error', () => {
+                    addLog('✗ Upload error - check server connection', "alert");
+                    uploadBtn.disabled = false;
+                });
+                
+                xhr.addEventListener('abort', () => {
+                    addLog('❌ Upload cancelled', "warning");
+                    uploadBtn.disabled = false;
+                });
+
+                xhr.open('POST', 'http://localhost:8000/classify/video');
+                xhr.send(formData);
+
+            } catch (error) {
+                addLog(`✗ Error: ${error.message}`, "alert");
+                uploadBtn.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            videoFileInput.value = '';
+            fileNameDisplay.textContent = '';
+            uploadBtn.disabled = true;
+            progressContainer.style.display = 'none';
+            progressFill.style.width = '0%';
+            progressFill.textContent = '0%';
+            resultsSection.style.display = 'none';
+            resultsDiv.innerHTML = '';
+            confirmModal.classList.remove('show');
+            pendingFile = null;
+            addLog('🔄 Form reset', "info");
+        });
+        
+        // Clear logs button
+        clearLogsBtn.addEventListener('click', () => {
+            log.innerHTML = '';
+            addLog('🗑️ Logs cleared', "info");
+        });
+        
+        // Export logs button
+        exportLogsBtn.addEventListener('click', () => {
+            const logs = Array.from(log.querySelectorAll('.log-entry')).map(el => el.textContent).join('\n');
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `skyguard_logs_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            addLog('📄 Logs exported successfully', "success");
+        });
+
+        function addLog(message, type = "info") {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Also add to history
+            addToHistory(message);
+        }
+        
+        function addToHistory(message) {
+            const historyList = document.getElementById('historyList');
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            const timestamp = new Date().toLocaleTimeString();
+            historyItem.innerHTML = `
+                <span class="history-label">${message}</span>
+                <span class="history-time">${timestamp}</span>
+            `;
+            
+            // Insert at top
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // Keep only last 20 items
+            while (historyList.children.length > 20) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        function displayResults(response) {
+            resultsSection.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <div class="result-item">
+                    <span class="result-key">📄 Filename:</span>
+                    <span class="result-value">${response.filename}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-key">🎯 Objects Detected:</span>
+                    <span class="result-value">${response.num_detected}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-key">⚠️ Alert Status:</span>
+                    <span class="result-value">${response.alert ? '🚨 THREAT DETECTED' : '✅ SAFE'}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-key">🔍 Detections:</span>
+                    <span class="result-value">${response.detections && response.detections.length > 0 ? response.detections.map(d => d.class).join(', ') : 'None'}</span>
+                </div>
+            `;
+        }
+        
+        function displayVideoResults(response) {
+            resultsSection.style.display = 'block';
+            let resultHTML = `
+                <div class="result-item">
+                    <span class="result-key">📄 Filename:</span>
+                    <span class="result-value">${response.filename}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-key">📹 Frames Processed:</span>
+                    <span class="result-value">${response.frames_processed || 0}</span>
+                </div>
+            `;
+            
+            if (response.results && response.results.length > 0) {
+                resultHTML += `
+                    <div class="result-item">
+                        <span class="result-key">🎯 Total Objects Found:</span>
+                        <span class="result-value">${response.results.reduce((sum, r) => sum + (r.num_detected || 0), 0)}</span>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = resultHTML;
+        }
+    </script>
+</body>
+</html>

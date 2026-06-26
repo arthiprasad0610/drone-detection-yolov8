@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# ML/DL Training runs and checkpoints
+runs/
+training_results/
+captured_datasets/training_results/
+captured_datasets/training_data/
+
+# Datasets and Temp Captures (exclude images/labels to keep repo light)
+captured_datasets/frames/
+captured_datasets/detected_objects/frames/
+captured_datasets/detected_objects/labels/
+captured_datasets/background_frames/frames/
+captured_datasets/background_frames/labels/
+input_dataset/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
